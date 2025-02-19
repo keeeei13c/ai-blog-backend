@@ -15,7 +15,7 @@ export class OpenAIService {
  private client: OpenAI;
  private model: string;
 
- constructor(apiKey: string, model: string = "gpt-4o-2024-11-20") {
+ constructor(apiKey: string, model: string = "gpt-4o-mini") {
    this.client = new OpenAI({
      apiKey: apiKey,
    });

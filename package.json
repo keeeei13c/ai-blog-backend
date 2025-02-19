@@ -10,7 +10,7 @@
     "deploy": "wrangler deploy",
     "deploy:dev": "wrangler deploy --env development",
     "generate": "drizzle-kit generate --config=./src/db/drizzle.config.ts",
-    "migrate:remote": "wrangler d1 execute my-hono-api-db --file=./src/db/migrations/0002_cold_ben_grimm.sql --remote"
+    "migrate:remote": "wrangler d1 execute my-hono-api-db --file=./src/db/migrations/0003_tiny_penance.sql --remote"
   },
   "keywords": [],
   "author": "",

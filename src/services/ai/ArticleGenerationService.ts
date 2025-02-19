@@ -20,7 +20,7 @@ export class ArticleGenerationService {
   private openaiService: OpenAIService;
 
   constructor(apiKey: string) {
-    this.openaiService = new OpenAIService(apiKey, "gpt-4o-2024-11-20");
+    this.openaiService = new OpenAIService(apiKey, "gpt-4o-mini");
   }
 
   async generateArticle(topic?: string): Promise<OpenAICompletionResponse<ArticleGenerationResult>> {

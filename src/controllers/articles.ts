@@ -75,28 +75,34 @@ export const articlesController = {
           title: generationResult.data.metadata.title,
           slug: generateSlug(generationResult.data.metadata.title),
           content: generationResult.data.content,
+          image: "https://placehold.co/600x400", // 静的なダミー画像
+          category: topic || "Technology", // デフォルトカテゴリ
           keywords: generationResult.data.metadata.keywords.join(','),
-          read_time: parseInt(generationResult.data.metadata.readTime),
+          read_time: generationResult.data.metadata.readTime,
           meta_description: generationResult.data.metadata.description,
           status: 'published',
+          date: new Date().toISOString().split('T')[0], // YYYY-MM-DD形式
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
   
         const result = await c.env.DB.prepare(`
           INSERT INTO articles (
-            title, slug, content, keywords,
-            read_time, meta_description, status, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            title, slug, content, image, category, keywords,
+            read_time, meta_description, status, date, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `)
         .bind(
           articleData.title,
           articleData.slug,
           articleData.content,
+          articleData.image,
+          articleData.category,
           articleData.keywords,
           articleData.read_time,
           articleData.meta_description,
           articleData.status,
+          articleData.date,
           articleData.created_at,
           articleData.updated_at
         )
@@ -118,7 +124,7 @@ export const articlesController = {
           message: 'Failed to generate and create article',
         }, 500)
       }
-    },
+  },
   // 関連記事取得
   getRelated: async (c: Context<{ Bindings: Bindings }>) => {
     try {

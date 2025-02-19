@@ -16,6 +16,8 @@ export const articles = sqliteTable("articles", {
   slug: text("slug").notNull().unique(),
   title: text("title").notNull(),
   content: text("content").notNull(),
+  image: text("image").default("https://placehold.co/600x400"), // デフォルトのダミー画像
+  imageAlt: text("image_alt"),
   category: text("category").notNull(),
   keywords: text("keywords"),
   readTime: integer("read_time").notNull(),

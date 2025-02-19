@@ -5,9 +5,9 @@ import openaiRoutes from './openai'
 import articlesRoutes from './articles'
 import { logger } from 'hono/logger'
 
+import { cors } from 'hono/cors'
 const app = new Hono<{ Bindings: Bindings }>()
-
-
+app.use('*', cors())
 app.use('*', logger())
 
 // ルートの定義

@@ -2,12 +2,12 @@ import { Hono } from 'hono'
 import { Bindings } from '../types/bindings'
 import { articlesController } from '../controllers/articles'
 
-const app = new Hono<{ Bindings: Bindings }>()
-
 // 記事関連のルーティング
-app.get('/', articlesController.getAll)
-app.get('/:slug', articlesController.getBySlug)
-app.post('/', articlesController.create)
-app.get('/related/:id', articlesController.getRelated)
+const articles = new Hono<{ Bindings: Bindings }>()
 
-export default app
+articles.get('/', articlesController.getAll)
+articles.get('/:slug', articlesController.getBySlug)
+articles.post('/', articlesController.create)
+articles.get('/related/:id', articlesController.getRelated)
+
+export default articles
