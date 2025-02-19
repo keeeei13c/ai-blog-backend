@@ -13,15 +13,15 @@ export const items = sqliteTable("items", {
 
 export const articles = sqliteTable("articles", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  slug: text("slug"),
+  slug: text("slug").notNull().unique(),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  image: text("image").notNull(),
   category: text("category").notNull(),
-  readTime: text("read_time").notNull(),
-  metadata: text("metadata"), // JSON文字列としてSEOメタデータを保存
-  status: text("status").notNull(), // draft, generating, published
-  date: text("date").notNull(), // 記事の公開日
+  keywords: text("keywords"),
+  readTime: integer("read_time").notNull(),
+  metaDescription: text("meta_description"),
+  status: text("status").notNull().default("draft"),
+  date: text("date").notNull(),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`)
 });

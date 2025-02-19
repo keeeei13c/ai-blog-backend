@@ -1,6 +1,8 @@
 import { Context } from 'hono'
 import { Bindings } from '../types/bindings'
 import { Article, RelatedArticle } from '../types/article';
+import { ArticleGenerationService } from '../services/ai/ArticleGenerationService';
+import { generateSlug } from '../utils/generate-slug';
 
 export const articlesController = {
   // 記事一覧取得
@@ -54,40 +56,69 @@ export const articlesController = {
   },
 
   // 記事作成（AI生成）
-  create: async (c: Context<{ Bindings: Bindings }>) => {
-    try {
-      const body = await c.req.json()
-      
-      // TODO: AIによる記事生成ロジック
-
-      const result = await c.env.DB.prepare(`
-        INSERT INTO articles (title, content, image, category, read_time, date)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `)
-      .bind(
-        body.title,
-        body.content,
-        body.image,
-        body.category,
-        body.readTime,
-        body.date
-      )
-      .run()
-
-      return c.json({
-        success: true,
-        message: 'Article created successfully',
-        data: { id: result.meta.last_row_id }
-      }, 201)
-    } catch (error) {
-      console.error('DB Error:', error)
-      return c.json({
-        success: false,
-        message: 'Failed to create article'
-      }, 500)
-    }
-  },
-
+    create: async (c: Context<{ Bindings: Bindings }>) => {
+      try {
+        const { topic } = await c.req.json()
+        
+        const generator = new ArticleGenerationService(c.env.OPENAI_API_KEY)
+        const generationResult = await generator.generateArticle(topic)
+        
+        if (!generationResult.success || !generationResult.data) {
+          return c.json({
+            success: false,
+            message: 'Article generation failed',
+            error: generationResult.error
+          }, 500)
+        }
+  
+        const articleData = {
+          title: generationResult.data.metadata.title,
+          slug: generateSlug(generationResult.data.metadata.title),
+          content: generationResult.data.content,
+          keywords: generationResult.data.metadata.keywords.join(','),
+          read_time: parseInt(generationResult.data.metadata.readTime),
+          meta_description: generationResult.data.metadata.description,
+          status: 'published',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+  
+        const result = await c.env.DB.prepare(`
+          INSERT INTO articles (
+            title, slug, content, keywords,
+            read_time, meta_description, status, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `)
+        .bind(
+          articleData.title,
+          articleData.slug,
+          articleData.content,
+          articleData.keywords,
+          articleData.read_time,
+          articleData.meta_description,
+          articleData.status,
+          articleData.created_at,
+          articleData.updated_at
+        )
+        .run()
+  
+        return c.json({
+          success: true,
+          message: 'Article created successfully',
+          data: {
+            id: result.meta.last_row_id,
+            article: articleData,
+            token_usage: generationResult.usage
+          }
+        }, 201)
+      } catch (error) {
+        console.error('Article Generation Error:', error)
+        return c.json({
+          success: false,
+          message: 'Failed to generate and create article',
+        }, 500)
+      }
+    },
   // 関連記事取得
   getRelated: async (c: Context<{ Bindings: Bindings }>) => {
     try {

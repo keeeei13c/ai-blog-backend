@@ -15,6 +15,13 @@
       "when": 1739925505887,
       "tag": "0001_rich_lila_cheney",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1739946246398,
+      "tag": "0002_cold_ben_grimm",
+      "breakpoints": true
     }
   ]
 }

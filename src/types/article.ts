@@ -1,11 +1,13 @@
 export type Article = {
   id: number;
-  slug: string | null;
+  slug: string;
   title: string;
   content: string;
-  image: string;
   category: string;
-  readTime: string;
+  keywords: string | null;
+  readTime: number;
+  metaDescription: string | null;
+  status: string;
   date: string;
   createdAt: string;
   updatedAt: string;
