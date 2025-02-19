@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { Bindings } from '../types/bindings'
 import itemsRoutes from './items'
 import openaiRoutes from './openai'
+import articlesRoutes from './articles'
 import { logger } from 'hono/logger'
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -19,5 +20,6 @@ app.get('/', (c) => {
 // 各ルートの集約
 app.route('/api/items', itemsRoutes)
 app.route('/api/openai', openaiRoutes)
+app.route('/api/articles', articlesRoutes)
 
 export default app
