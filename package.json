@@ -6,10 +6,11 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "predeploy": "node scripts/generate-env.js",
     "deploy": "wrangler deploy",
     "deploy:dev": "wrangler deploy --env development",
     "generate": "drizzle-kit generate --config=./src/db/drizzle.config.ts",
-    "migrate:remote": "wrangler d1 execute my-hono-api-db --file=./src/db/migrations/0000_supreme_true_believers.sql --remote"
+    "migrate:remote": "wrangler d1 execute my-hono-api-db --file=./src/db/migrations/0000_calm_wild_pack.sql --remote"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +28,7 @@
     "@cloudflare/workers-types": "^4.20250214.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.13.4",
+    "dotenv": "^16.4.7",
     "drizzle-kit": "^0.30.4",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
