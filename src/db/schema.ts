@@ -13,23 +13,18 @@ export const items = sqliteTable("items", {
 
 export const articles = sqliteTable("articles", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  slug: text("slug"), // .unique()を削除
+  slug: text("slug"),
   title: text("title").notNull(),
   content: text("content").notNull(),
   image: text("image").notNull(),
   category: text("category").notNull(),
   readTime: text("read_time").notNull(),
-  date: text("date").notNull(),
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now'))`),
-  updatedAt: text("updated_at")
-    .notNull()
-    .default(sql`(datetime('now'))`)
-}, (table) => [
-  index("articles_category_idx").on(table.category),
-  uniqueIndex("articles_slug_idx").on(table.slug)
-]);
+  metadata: text("metadata"), // JSON文字列としてSEOメタデータを保存
+  status: text("status").notNull(), // draft, generating, published
+  date: text("date").notNull(), // 記事の公開日
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`)
+});
 
 // 関連記事テーブル
 export const relatedArticles = sqliteTable("related_articles", {

@@ -1,12 +1,12 @@
-name = "${WORKER_NAME}"
+name = "my-hono-api"
 main = "src/index.ts"
 compatibility_date = "2024-02-17"
 
 [vars]
-API_KEY = "${API_KEY}"
-OPENAI_API_KEY = "${OPENAI_API_KEY}"
+API_KEY = "34b6da06f0e54830980fef710100d61a9b4aa95231ed286924a7965c41f6349a"
+OPENAI_API_KEY = "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"
 
 [[d1_databases]]
-binding = "${D1_DATABASE_BINDING}"
-database_name = "${D1_DATABASE_NAME}"
-database_id = "${D1_DATABASE_ID}"
+binding = "DB"
+database_name = "my-hono-api-db"
+database_id = "89076300-b511-4c68-8985-c9cdce52db30"

@@ -1,4 +1,4 @@
-export type APIResponse<T = any> = {
+export type OpenAICompletionResponse<T = any> = {
   success: boolean;
   data?: T;
   error?: string;
@@ -9,7 +9,7 @@ export type APIResponse<T = any> = {
   };
 };
 
-export type GenerateRequest = {
+export type OpenAICompletionRequest = {
   prompt: string;
   model?: string;
   temperature?: number;
