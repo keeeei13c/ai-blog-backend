@@ -3,10 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2024-02-17"
 
 [vars]
-API_KEY = "34b6da06f0e54830980fef710100d61a9b4aa95231ed286924a7965c41f6349a"
-OPENAI_API_KEY = "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"
+API_KEY = ""
+OPENAI_API_KEY = ""
 
 [[d1_databases]]
 binding = "DB"
-database_name = "my-hono-api-db"
-database_id = "89076300-b511-4c68-8985-c9cdce52db30"
+database_name = ""
+database_id = ""
