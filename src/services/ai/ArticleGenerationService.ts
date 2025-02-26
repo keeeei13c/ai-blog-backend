@@ -10,7 +10,7 @@ export const articleGenerationResultSchema = z.object({
     description: z.string(),
     keywords: z.array(z.string()),
     readTime: z.string(),
-    imagePrompt: z.string()
+    imagePrompt: z.string().optional() // optionalに変更
   })
 });
 
@@ -39,7 +39,10 @@ export class ArticleGenerationService {
         };
       }
 
-      const parsedData = articleGenerationResultSchema.parse(JSON.parse(result.data));
+      let parsedData = articleGenerationResultSchema.parse(JSON.parse(result.data));
+
+      // **Unsplash用のキーワードを最適化**
+      parsedData.metadata.keywords = this.optimizeImageKeywords(parsedData.metadata.keywords, topic);
       
       return {
         success: true,
@@ -84,6 +87,10 @@ ${topic ? `トピック: ${topic}` : '現在のトレンドに基づいて適切
 - 読者の課題解決に焦点を当てた内容
 - 信頼性の高い情報提供
 
+4. 画像の説明（Unsplash検索用）
+- 記事の内容を表す画像を選ぶための説明を生成してください
+- **"imagePrompt"** の値として設定してください（英語で記述）
+
 JSON形式で以下の構造で出力してください：
 {
   "content": "Markdown形式の記事本文",
@@ -95,5 +102,86 @@ JSON形式で以下の構造で出力してください：
     "imagePrompt": "記事のメイン画像のための説明文"
   }
 }`;
+  }
+
+  /**
+   * **Unsplash用のキーワード最適化**
+   * - `imagePrompt` がある場合は `keywords` を補強
+   * - `keywords` が不足している場合は自動補完
+   */
+  private optimizeImageKeywords(keywords: string[], topic?: string): string[] {
+    const enhancedKeywords = new Set(keywords.map(k => k.toLowerCase()));
+
+    // トピックを追加（被りを防ぐ）
+    if (topic) {
+      enhancedKeywords.add(topic.toLowerCase());
+    }
+
+    // **ジャンルごとのキーワード補強**
+    const categoryKeywords: Record<string, string[]> = {
+      "food": ["Food", "Recipe", "Delicious", "Cooking", "Cuisine", "Gourmet", "Healthy Food", "Street Food"],
+      "technology": ["Technology", "Coding", "Software Development", "AI", "Machine Learning", "Cybersecurity", "Blockchain"],
+      "business": ["Business", "Finance", "Startup", "Entrepreneur", "Corporate", "Marketing", "Leadership"],
+      "travel": ["Travel", "Adventure", "Tourism", "Nature", "Hiking", "Beaches", "Mountains", "Cultural Travel"],
+      "health": ["Health", "Wellness", "Fitness", "Nutrition", "Mental Health", "Yoga", "Gym", "Healthy Lifestyle"],
+      "education": ["Education", "Learning", "School", "University", "E-learning", "Books", "Study", "Online Courses"],
+      "sports": ["Sports", "Athletics", "Football", "Basketball", "Tennis", "Running", "Cycling", "Extreme Sports"],
+      "fashion": ["Fashion", "Style", "Trendy", "Clothing", "Luxury", "Streetwear", "Designer", "Accessories"],
+      "music": ["Music", "Concert", "Live Performance", "Instruments", "Rock", "Pop", "Jazz", "Classical Music"],
+      "art": ["Art", "Painting", "Sculpture", "Exhibition", "Illustration", "Graffiti", "Museum", "Creative"],
+      "photography": ["Photography", "Portrait", "Landscape", "Street Photography", "Aerial", "Studio", "Black and White"],
+      "science": ["Science", "Physics", "Biology", "Chemistry", "Astronomy", "Genetics", "Research", "Laboratory"],
+      "history": ["History", "Ancient", "Medieval", "Modern", "World War", "Cultural Heritage", "Historical Sites"],
+      "architecture": ["Architecture", "Buildings", "Urban Design", "Skyscrapers", "Bridges", "Interior Design"],
+      "automobile": ["Car", "Automobile", "Motorcycle", "Sports Car", "Electric Vehicle", "Vintage Cars"],
+      "space": ["Space", "Astronomy", "Planets", "NASA", "Galaxy", "Rocket", "Aliens", "Moon"],
+      "gaming": ["Gaming", "Video Games", "Esports", "PC Gaming", "Console Gaming", "Retro Games", "VR", "RPG"],
+      "finance": ["Finance", "Investment", "Stock Market", "Cryptocurrency", "Banking", "Wealth", "Economy"],
+      "environment": ["Environment", "Sustainability", "Climate Change", "Recycling", "Nature Conservation"],
+      "pets": ["Pets", "Dogs", "Cats", "Birds", "Exotic Pets", "Pet Care", "Veterinary"],
+      "parenting": ["Parenting", "Children", "Babies", "Family", "Motherhood", "Fatherhood"],
+      "home": ["Home", "Interior Design", "Furniture", "Decor", "Smart Home", "DIY Home Improvement"],
+      "fitness": ["Fitness", "Workout", "Gym", "Personal Training", "Strength Training", "Cardio"],
+      "mindfulness": ["Mindfulness", "Meditation", "Self-Care", "Happiness", "Inner Peace"],
+      "books": ["Books", "Reading", "Library", "Literature", "Bookstore", "Writing"],
+      "cinema": ["Cinema", "Movies", "Film Industry", "Hollywood", "Independent Film"],
+      "relationships": ["Relationships", "Dating", "Love", "Marriage", "Friendship", "Family Bonds"],
+      "psychology": ["Psychology", "Human Mind", "Mental Health", "Behavioral Science", "Self-Improvement"],
+      "food and drinks": ["Food", "Drinks", "Beverage", "Cocktails", "Coffee", "Tea", "Wine"],
+      "DIY": ["DIY", "Crafts", "Handmade", "Woodworking", "Painting", "Repairs"],
+      "law": ["Law", "Legal", "Justice", "Courts", "Lawyers", "Criminal Law"],
+      "military": ["Military", "Defense", "Army", "Navy", "Air Force", "Weapons"],
+      "aviation": ["Aviation", "Airplanes", "Pilots", "Airports", "Flying"],
+      "urban life": ["Urban", "City Life", "Street Culture", "Public Transport", "Nightlife"],
+      "festivals": ["Festivals", "Celebrations", "Carnivals", "Music Festivals", "Cultural Events"],
+      "hiking": ["Hiking", "Mountains", "Trails", "Outdoor Adventure", "Camping"],
+      "weddings": ["Weddings", "Bride", "Groom", "Ceremony", "Marriage", "Celebration"],
+      "gardening": ["Gardening", "Plants", "Flowers", "Landscaping", "Greenhouse"],
+      "extreme sports": ["Extreme Sports", "Skydiving", "Snowboarding", "BMX", "Surfing"],
+      "luxury": ["Luxury", "Expensive", "High-End", "Fashion", "Lifestyle"],
+      "startup": ["Startup", "Entrepreneurship", "Innovation", "Business Growth"],
+      "urban planning": ["Urban Planning", "City Design", "Infrastructure", "Smart Cities"],
+      "cosplay": ["Cosplay", "Anime", "Costumes", "Comic Con", "Fantasy"],
+      "mythology": ["Mythology", "Legends", "Folklore", "Myths", "Gods"],
+      "subcultures": ["Subcultures", "Punk", "Gothic", "Hip-Hop", "Alternative"],
+      "artificial intelligence": ["Artificial Intelligence", "Machine Learning", "Deep Learning", "AI Ethics"],
+      "cybersecurity": ["Cybersecurity", "Hacking", "Online Security", "Data Privacy"],
+      "philosophy": ["Philosophy", "Ethics", "Existentialism", "Logic", "Wisdom"]
+    };    
+
+    // **トピックに応じたキーワードを追加**
+    for (const [category, words] of Object.entries(categoryKeywords)) {
+      if (keywords.some(k => category.includes(k.toLowerCase()))) {
+        words.forEach(w => enhancedKeywords.add(w));
+      }
+    }
+
+    // **フォールバック**
+    if (enhancedKeywords.size < 3) {
+      enhancedKeywords.add("Photography");
+      enhancedKeywords.add("Stock Image");
+    }
+
+    return Array.from(enhancedKeywords);
   }
 }

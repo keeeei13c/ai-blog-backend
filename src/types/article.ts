@@ -3,6 +3,8 @@ export type Article = {
   slug: string;
   title: string;
   content: string;
+  image: string;
+  imageAlt: string | null;
   category: string;
   keywords: string | null;
   readTime: number;
@@ -17,4 +19,16 @@ export type RelatedArticle = {
   id: number;
   title: string;
   category: string;
+}
+
+export type ArticleResponse = {
+  success: boolean;
+  data?: Article;
+  error?: string;
+}
+
+export type ArticleListResponse = {
+  success: boolean;
+  data?: Article[];
+  error?: string;
 }

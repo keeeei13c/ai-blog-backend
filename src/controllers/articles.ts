@@ -2,7 +2,16 @@ import { Context } from 'hono'
 import { Bindings } from '../types/bindings'
 import { Article, RelatedArticle } from '../types/article';
 import { ArticleGenerationService } from '../services/ai/ArticleGenerationService';
-import { generateSlug } from '../utils/generate-slug';
+import { generateRandomSlug, generateSlug } from '../utils/generate-slug';
+import { UnsplashService } from '../services/image/unsplash';
+
+interface CreateArticleRequest {
+  title?: string;
+  content?: string;
+  category?: string;
+  metaDescription?: string;
+  image?: string;
+}
 
 export const articlesController = {
   // 記事一覧取得
@@ -55,76 +64,117 @@ export const articlesController = {
     }
   },
 
+  getImage: async (c: Context<{ Bindings: Bindings }>) => {
+    try {
+      const { topic } = await c.req.json();
+      const unsplashService = new UnsplashService();
+      const imageUrl = await unsplashService.getImage([
+        topic
+      ]);
+
+      return c.json({
+        success: true,
+        data: {
+          image: imageUrl
+        }
+      })
+    } catch (error) {
+      console.error('Unsplash Error:', error)
+      return c.json({
+        success: false,
+        message: 'Failed to fetch image'
+      }, 500)
+    }
+  },
+
   // 記事作成（AI生成）
-    create: async (c: Context<{ Bindings: Bindings }>) => {
-      try {
-        const { topic } = await c.req.json()
-        
-        const generator = new ArticleGenerationService(c.env.OPENAI_API_KEY)
-        const generationResult = await generator.generateArticle(topic)
-        
-        if (!generationResult.success || !generationResult.data) {
-          return c.json({
-            success: false,
-            message: 'Article generation failed',
-            error: generationResult.error
-          }, 500)
-        }
-  
-        const articleData = {
-          title: generationResult.data.metadata.title,
-          slug: generateSlug(generationResult.data.metadata.title),
-          content: generationResult.data.content,
-          image: "https://placehold.co/600x400", // 静的なダミー画像
-          category: topic || "Technology", // デフォルトカテゴリ
-          keywords: generationResult.data.metadata.keywords.join(','),
-          read_time: generationResult.data.metadata.readTime,
-          meta_description: generationResult.data.metadata.description,
-          status: 'published',
-          date: new Date().toISOString().split('T')[0], // YYYY-MM-DD形式
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-  
-        const result = await c.env.DB.prepare(`
-          INSERT INTO articles (
-            title, slug, content, image, category, keywords,
-            read_time, meta_description, status, date, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `)
-        .bind(
-          articleData.title,
-          articleData.slug,
-          articleData.content,
-          articleData.image,
-          articleData.category,
-          articleData.keywords,
-          articleData.read_time,
-          articleData.meta_description,
-          articleData.status,
-          articleData.date,
-          articleData.created_at,
-          articleData.updated_at
-        )
-        .run()
-  
-        return c.json({
-          success: true,
-          message: 'Article created successfully',
-          data: {
-            id: result.meta.last_row_id,
-            article: articleData,
-            token_usage: generationResult.usage
-          }
-        }, 201)
-      } catch (error) {
-        console.error('Article Generation Error:', error)
+  create: async (c: Context<{ Bindings: Bindings }>) => {
+    try {
+      const { topic } = await c.req.json();
+      
+      const generator = new ArticleGenerationService(c.env.OPENAI_API_KEY);
+      const generationResult = await generator.generateArticle(topic)
+      const unsplashService = new UnsplashService();
+      const slug = generateRandomSlug();
+      
+      if (!generationResult.success || !generationResult.data) {
         return c.json({
           success: false,
-          message: 'Failed to generate and create article',
-        }, 500)
+          message: 'Article generation failed',
+          error: generationResult.error
+        }, 500);
       }
+
+      // 画像検索用のキーワードを準備
+      const searchKeywords = [
+        ...generationResult.data.metadata.keywords,
+        ...generationResult.data.metadata.imagePrompt || [],
+        topic,
+      ];
+
+      // Unsplash画像の取得
+      const imageUrl = await unsplashService.getImage([
+        searchKeywords,
+        topic
+      ]);
+
+      const articleData = {
+        title: generationResult.data.metadata.title,
+        slug: slug,
+        content: generationResult.data.content,
+        image: imageUrl,
+        image_alt: generationResult.data.metadata.title,
+        category: topic || "Technology",
+        keywords: generationResult.data.metadata.keywords.join(','),
+        read_time: generationResult.data.metadata.readTime,
+        meta_description: generationResult.data.metadata.description,
+        status: 'published',
+        date: new Date().toISOString().split('T')[0],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      const result = await c.env.DB.prepare(`
+        INSERT INTO articles (
+          title, slug, content, image, category, keywords,
+          read_time, meta_description, status, date, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .bind(
+        articleData.title,
+        articleData.slug,
+        articleData.content,
+        articleData.image,
+        articleData.category,
+        articleData.keywords,
+        articleData.read_time,
+        articleData.meta_description,
+        articleData.status,
+        articleData.date,
+        articleData.created_at,
+        articleData.updated_at
+      )
+      .run();
+
+      return c.json({
+        success: true,
+        message: 'Article created successfully',
+        data: {
+          id: result.meta.last_row_id,
+          article: articleData,
+          token_usage: generationResult.usage
+        }
+      }, 201);
+    } catch (error) {
+      console.error('Article Generation Error:', error);
+      return c.json({
+        success: false,
+        message: 'Failed to generate and create article',
+      }, 500);
+    }
   },
+
+
   // 関連記事取得
   getRelated: async (c: Context<{ Bindings: Bindings }>) => {
     try {

@@ -9,3 +9,7 @@ export const generateSlug = (title: string): string =>{
     .trim() // 前後の空白を削除
     .replace(/^-+|-+$/g, ''); // 先頭と末尾のハイフンを削除
 }
+
+export const generateRandomSlug = (): string =>{
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
