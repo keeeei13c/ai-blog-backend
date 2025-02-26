@@ -1,4 +1,4 @@
-# hono-ai-edge-api
+# ai-blog-backend
 
 Cloudflareのエッジ環境で動作するAI機能を備えたAPIサーバー。HonoフレームワークとCloudflare D1を使用し、OpenAI APIと連携してAI機能を提供します。
 
